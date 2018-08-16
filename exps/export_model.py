@@ -95,7 +95,19 @@ def evaluate(args):
         torch.onnx.export(net, inputs, onnx_name, verbose=True, input_names=input_name, output_names=output_name)
         print(batch_locs)
         print(batch_scos)
+    cpu = torch.device('cpu')
+    np_batch_locs, np_batch_scos, cropped_size = batch_locs.to(cpu).numpy(), batch_scos.to(cpu).numpy(), cropped_size.numpy()
+    locations, scores = np_batch_locs[0,:-1,:], np.expand_dims(np_batch_scos[0,:-1], -1)
 
+    #scale_h, scale_w = cropped_size[0] * 1. / inputs.size(-2) , cropped_size[1] * 1. / inputs.size(-1)
+
+    locations[:, 0], locations[:, 1] = locations[:, 0] * 2, locations[:, 1] * 2
+    prediction = np.concatenate((locations, scores), axis=1).transpose(1,0)
+
+
+    pred_pts = np.transpose(prediction, [1, 0])
+    pred_pts = pred_pts[:, :-1]
+    print(pred_pts)
 
 
 
