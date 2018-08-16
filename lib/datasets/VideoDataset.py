@@ -40,6 +40,7 @@ class VideoDataset(data.Dataset):
     return ('{name}(point-num={NUM_PTS}, sigma={sigma}, heatmap_type={heatmap_type}, length={length}, dataset={dataset_name}, parser={video_parser})'.format(name=self.__class__.__name__, **self.__dict__))
 
   def reset(self, num_pts=-1):
+
     self.length = 0
     self.NUM_PTS = num_pts
     self.datas = []

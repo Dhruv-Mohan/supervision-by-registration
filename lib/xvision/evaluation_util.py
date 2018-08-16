@@ -13,7 +13,18 @@ from collections import OrderedDict
 from scipy import interpolate
 from mpl_toolkits.mplot3d import Axes3D
 from .common_eval import evaluate_normalized_mean_error
+import cv2
 
+import os
+
+import natsort
+'''
+inject_path = '/home/dhruv/Projects/Datasets/G_video/images'
+inject_image_list = os.listdir(inject_path)
+inject_image_list = natsort.natsorted(inject_image_list)
+for i,image in enumerate(inject_image_list):
+    inject_image_list[i] = os.path.join(inject_path, image)
+'''
 class Eval_Meta():
 
   def __init__(self):
@@ -55,8 +66,11 @@ class Eval_Meta():
     checkpoint       = torch.load(filename)
     self.predictions = checkpoint['predictions']
     self.groundtruth = checkpoint['groundtruth']
-    self.image_lists = checkpoint['image_lists']
+    #self.image_lists = checkpoint['image_lists']
     self.face_sizes  = checkpoint['face_sizes']
+    self.image_lists = inject_image_list
+
+
 
   def compute_mse(self, log):
     predictions, groundtruth, face_sizes, num = [], [], [], 0

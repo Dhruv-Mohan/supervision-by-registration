@@ -93,12 +93,12 @@ class VGG16_base(nn.Module):
 
     # The location of the current batch
     for ibatch in range(batch_size):
-      batch_location, batch_score = find_tensor_peak_batch(batch_cpms[-1][ibatch], self.config.argmax, self.downsample)
-      batch_locs.append( batch_location )
-      batch_scos.append( batch_score )
-    batch_locs, batch_scos = torch.stack(batch_locs), torch.stack(batch_scos)
+        batch_location, batch_score = find_tensor_peak_batch(batch_cpms[-1][ibatch], self.config.argmax, self.downsample)
+        batch_locs.append( batch_location )
+        batch_scos.append( batch_score )
+        batch_locs, batch_scos = torch.stack(batch_locs), torch.stack(batch_scos)
 
-    return batch_cpms, batch_locs, batch_scos
+    return batch_locs, batch_scos
 
 # use vgg16 conv1_1 to conv4_4 as feature extracation        
 model_urls = 'https://download.pytorch.org/models/vgg16-397923af.pth'

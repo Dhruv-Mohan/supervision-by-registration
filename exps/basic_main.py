@@ -30,13 +30,14 @@ def main(args):
   torch.backends.cudnn.enabled   = True
   torch.backends.cudnn.benchmark = True
   prepare_seed(args.rand_seed)
-
+  args.workers = 32
   logstr = 'seed-{:}-time-{:}'.format(args.rand_seed, time_for_file())
   logger = Logger(args.save_path, logstr)
   logger.log('Main Function with logger : {:}'.format(logger))
   logger.log('Arguments : -------------------------------')
   for name, value in args._get_kwargs():
     logger.log('{:16} : {:}'.format(name, value))
+
   logger.log("Python  version : {}".format(sys.version.replace('\n', ' ')))
   logger.log("Pillow  version : {}".format(PIL.__version__))
   logger.log("PyTorch version : {}".format(torch.__version__))

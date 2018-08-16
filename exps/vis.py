@@ -32,6 +32,8 @@ def visualize(args):
   if not save.exists(): os.makedirs( args.save )
   for i in range(len(xmeta)):
     image, prediction = xmeta.image_lists[i], xmeta.predictions[i]
+    print(len(xmeta.predictions))
+    input('cra')
     name = osp.basename(image)
     image = draw_image_by_points(image, prediction, 2, (255, 0, 0), False, False)
     path = save / name

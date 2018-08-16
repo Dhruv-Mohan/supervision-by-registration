@@ -19,6 +19,24 @@ from datasets import GeneralDataset as Dataset
 from xvision import transforms, draw_image_by_points
 from models import obtain_model, remove_module_dict
 from config_utils import load_configure
+import os
+import cv2
+
+from Records.utils.draw import draw_pts
+from Records.Collection_engine import Collection_engine
+from Records.utils.terminal_utils import progressbar
+from Records.utils.pointIO import *
+
+
+
+_image_path = '/home/dhruv/Projects/Datasets/Groomyfy_16k/Menpo51220/val/'
+_output_path = '/home/dhruv/Projects/TFmodels/sbr/'
+_pts_path_ = '/home/dhruv/Projects/Datasets/Groomyfy_16k/Menpo51220/pts/'
+#_image_path = '/home/dhruv/Projects/Datasets/300VW_Dataset_2015_12_14/001/out/'
+images = os.listdir(_image_path)
+
+
+
 
 def evaluate(args):
   assert torch.cuda.is_available(), 'CUDA is not available.'
@@ -29,8 +47,6 @@ def evaluate(args):
   print ('The model is {:}'.format(args.model))
   snapshot = Path(args.model)
   assert snapshot.exists(), 'The model path {:} does not exist'
-  print ('The face bounding box is {:}'.format(args.face))
-  assert len(args.face) == 4, 'Invalid face input : {:}'.format(args.face)
   snapshot = torch.load(snapshot)
 
   # General Data Argumentation
@@ -47,35 +63,69 @@ def evaluate(args):
   net = obtain_model(model_config, param.num_pts + 1)
   net = net.cuda()
   weights = remove_module_dict(snapshot['state_dict'])
+  nu_weights ={}
+  for key,val in weights.items():
+      nu_weights[key.split('detector.')[-1]] = val
+      print(key.split('detector.')[-1])
+  weights = nu_weights
   net.load_state_dict(weights)
   print ('Prepare input data')
-  [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input(args.image, args.face)
-  inputs = image.unsqueeze(0).cuda()
-  # network forward
-  with torch.no_grad():
-    batch_heatmaps, batch_locs, batch_scos = net(inputs)
-  # obtain the locations on the image in the orignial size
-  cpu = torch.device('cpu')
-  np_batch_locs, np_batch_scos, cropped_size = batch_locs.to(cpu).numpy(), batch_scos.to(cpu).numpy(), cropped_size.numpy()
-  locations, scores = np_batch_locs[0,:-1,:], np.expand_dims(np_batch_scos[0,:-1], -1)
+  l1 = []
+  record_writer = Collection_engine.produce_generator()
+  total_images = len(images)
+  for im_ind, aimage in enumerate(images):
+    progressbar(im_ind, total_images)
 
-  scale_h, scale_w = cropped_size[0] * 1. / inputs.size(-2) , cropped_size[1] * 1. / inputs.size(-1)
+    pts_name = os.path.splitext(aimage)[0] +'.pts'
+    pts_full = _pts_path_+ pts_name
+    gtpts = get_pts(pts_full, 90)
+    aim = _image_path + aimage
+    args.image = aim
+    im = cv2.imread(aim)
+    imshape = im.shape
+    args.face = [0,0, imshape[0], imshape[1]]
+    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input(args.image, args.face)
+    inputs = image.unsqueeze(0).cuda()
+    # network forward
+    with torch.no_grad():
+      batch_heatmaps, batch_locs, batch_scos = net(inputs)
+    # obtain the locations on the image in the orignial size
+    cpu = torch.device('cpu')
+    np_batch_locs, np_batch_scos, cropped_size = batch_locs.to(cpu).numpy(), batch_scos.to(cpu).numpy(), cropped_size.numpy()
+    locations, scores = np_batch_locs[0,:-1,:], np.expand_dims(np_batch_scos[0,:-1], -1)
 
-  locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[2], locations[:, 1] * scale_h + cropped_size[3]
-  prediction = np.concatenate((locations, scores), axis=1).transpose(1,0)
+    scale_h, scale_w = cropped_size[0] * 1. / inputs.size(-2) , cropped_size[1] * 1. / inputs.size(-1)
 
-  print ('the coordinates for {:} facial landmarks:'.format(param.num_pts))
-  for i in range(param.num_pts):
-    point = prediction[:, i]
-    print ('the {:02d}/{:02d}-th point : ({:.1f}, {:.1f}), score = {:.2f}'.format(i, param.num_pts, float(point[0]), float(point[1]), float(point[2])))
+    locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[2], locations[:, 1] * scale_h + cropped_size[3]
+    prediction = np.concatenate((locations, scores), axis=1).transpose(1,0)
 
-  if args.save:
-    resize = 512
-    image = draw_image_by_points(args.image, prediction, 2, (255, 0, 0), args.face, resize)
-    image.save(args.save)
-    print ('save the visualization results into {:}'.format(args.save))
-  else:
-    print ('ignore the visualization procedure')
+    #print ('the coordinates for {:} facial landmarks:'.format(param.num_pts))
+    for i in range(param.num_pts):
+      point = prediction[:, i]
+      #print ('the {:02d}/{:02d}-th point : ({:.1f}, {:.1f}), score = {:.2f}'.format(i, param.num_pts, float(point[0]), float(point[1]), float(point[2])))
+
+    if args.save:
+      args.save = _output_path + aimage
+      resize = 512
+      #image = draw_image_by_points(args.image, prediction, 2, (255, 0, 0), args.face, resize)
+      #sim, l1e =draw_pts(im, gt_pts=gtpts, pred_pts=prediction, get_l1e=True)
+      #print(np.mean(l1e))
+      #l1.append(np.mean(l1e))
+      pred_pts = np.transpose(prediction, [1, 0])
+      pred_pts= pred_pts[:, :-1]
+      record_writer.consume_data(im, gt_pts=gtpts, pred_pts=pred_pts, name=aimage)
+      #cv2.imwrite(_output_path+aimage, sim)
+      #image.save(args.save)
+      #print ('save the visualization results into {:}'.format(args.save))
+    else:
+      print ('ignore the visualization procedure')
+
+  record_writer.post_process()
+  record_writer.generate_output(output_path= _output_path,
+                                epochs=50,
+                                name='Supervision By Registration')
+  #print('mean l1')
+  #print(np.mean(l1))
 
 
 if __name__ == '__main__':

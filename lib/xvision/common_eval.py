@@ -7,7 +7,7 @@
 import numpy as np
 import pdb, os, time
 from log_utils import print_log
-from datasets.dataset_utils import convert68to49, convert68to51
+#from datasets.dataset_utils import convert68to49, convert68to51
 from sklearn.metrics import auc
 
 def evaluate_normalized_mean_error(predictions, groundtruth, log, extra_faces):
@@ -25,9 +25,9 @@ def evaluate_normalized_mean_error(predictions, groundtruth, log, extra_faces):
   for i in range(num_images):
     detected_points = predictions[i]
     ground_truth_points = groundtruth[i]
-    if num_points == 68:
-      interocular_distance = np.linalg.norm(ground_truth_points[:2, 36] - ground_truth_points[:2, 45])
-      assert bool(ground_truth_points[2,36]) and bool(ground_truth_points[2,45])
+    if num_points == 90:
+      interocular_distance = np.linalg.norm(ground_truth_points[:2, 20] - ground_truth_points[:2, 29])
+      assert bool(ground_truth_points[2,20]) and bool(ground_truth_points[2,29])
     elif num_points == 51 or num_points == 49:
       interocular_distance = np.linalg.norm(ground_truth_points[:2, 19] - ground_truth_points[:2, 28])
       assert bool(ground_truth_points[2,19]) and bool(ground_truth_points[2,28])

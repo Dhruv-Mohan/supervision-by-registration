@@ -16,6 +16,7 @@ from scipy.io import loadmat
 from utils.file_utils import load_list_from_folders, load_txt_file
 import pickle
 
+
 def load_box(mat_path, cdir):
   mat = loadmat(mat_path)
   mat = mat['bounding_boxes']
@@ -28,7 +29,7 @@ def load_box(mat_path, cdir):
     bb_ground_t = cobject[0][0][2][0]
     image_path = osp.join(cdir, name)
     image_path = image_path[:-4]
-    all_object.append( (image_path, bb_detector, bb_ground_t) )
+    all_object.append((image_path, bb_detector, bb_ground_t))
   return all_object
 
 def load_mats(lists):
@@ -46,7 +47,7 @@ def return_box(image_path, pts_path, all_dict, USE_BOX):
   if USE_BOX == 'GTL':
     box_str = datasets.dataset_utils.for_generate_box_str(pts_path, 68, 0)
   elif USE_BOX == 'GTB':
-    box_str = '{:.4f} {:.4f} {:.4f} {:.4f}'.format(np_boxes[1][0], np_boxes[1][1], np_boxes[1][2], np_boxes[1][3])
+    box_str = '{:.4f} {:.4f} {:.4f} {:.4f}'.format(np_boxes[0][0], np_boxes[0][1], np_boxes[0][2], np_boxes[0][3])
   elif USE_BOX == 'DET':
     box_str = '{:.4f} {:.4f} {:.4f} {:.4f}'.format(np_boxes[0][0], np_boxes[0][1], np_boxes[0][2], np_boxes[0][3])
   else:

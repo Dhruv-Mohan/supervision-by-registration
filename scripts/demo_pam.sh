@@ -1,7 +1,7 @@
 CUDA_VISIBLE_DEVICES=0,1 python ./exps/lk_main.py \
 	--train_lists ./cache_data/lists/demo/demo-pam.lst \
 	--eval_ilists ./cache_data/lists/demo/demo-pam.lst \
-	--num_pts 68 \
+	--num_pts 90 \
 	--model_config ./configs/Detector.config \
 	--opt_config   ./configs/LK.SGD.config \
 	--lk_config    ./configs/lk.config \

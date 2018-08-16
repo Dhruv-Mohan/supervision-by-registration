@@ -49,9 +49,8 @@ def anno_parser_v0(anno_path, num_pts):
   assert data[2] == '{' and data[-1] == '}', 'starting and end symbol is not correct'                          
                              
   assert data[0] == 'version: 1' or data[0] == 'version: 1.0', 'The version is wrong : {}'.format(data[0])
-  n_points = int(data[1][len('n_points: '):])                         
-                             
-  assert num_lines == n_points + 4, 'number of lines is not correct'    # 4 lines for general information: version, n_points, start and end symbol      
+  n_points = int(data[1][len('n_points: '):])
+  assert num_lines == n_points + 4, 'number of lines is not correct'    # 4 lines for general information: version, n_points, start and end symbol
   assert num_pts == n_points, 'number of points is not correct'
                              
   # read points coordinate   

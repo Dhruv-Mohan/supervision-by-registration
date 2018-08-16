@@ -14,14 +14,21 @@ def find_tensor_peak_batch(heatmap, radius, downsample, threshold = 0.000001):
   assert heatmap.dim() == 3, 'The dimension of the heatmap is wrong : {}'.format(heatmap.size())
   assert radius > 0 and isinstance(radius, numbers.Number), 'The radius is not ok : {}'.format(radius)
   num_pts, H, W = heatmap.size(0), heatmap.size(1), heatmap.size(2)
+  num_pts = 91
+  H = 32
+  W = 32
+
   assert W > 1 and H > 1, 'To avoid the normalization function divide zero'
   # find the approximate location:
   score, index = torch.max(heatmap.view(num_pts, -1), 1)
-  index_w = (index % W).float()
-  index_h = (index / W).float()
-  
+  #index_w = (index % W) aten_op remainder missing
+  index_h = (index / W)
+  index_w = index - index_h*W
+  index_w = index_w.float()
+  index_h = index_h.float()
   def normalize(x, L):
-    return -1. + 2. * x.data / (L-1)
+    norm_core = x.data / (L - 1)
+    return -1. + 2. * norm_core
   boxes = [index_w - radius, index_h - radius, index_w + radius, index_h + radius]
   boxes[0] = normalize(boxes[0], W)
   boxes[1] = normalize(boxes[1], H)
