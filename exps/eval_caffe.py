@@ -59,7 +59,7 @@ def evaluate(args):
 
 
     c_locations = c_locs[0, :-1, :]
-    c_locations[:, 0], c_locations[:, 1] = c_locations[:, 0] * 2 , c_locations[:, 1] * 2
+    c_locations[:, 0], c_locations[:, 1] = c_locations[:, 0] * imshape[1]/256. , c_locations[:, 1] * imshape[0]/256.
 
     c_scores = np.expand_dims(c_scors[0, :-1], -1)
 
@@ -68,7 +68,8 @@ def evaluate(args):
     c_pred_pts = np.transpose(c_pred_pts, [1, 0])
     c_pred_pts = c_pred_pts[:, :-1]
     print(c_pred_pts, '\n\n\n')
-
+    sim = draw_pts(im, pred_pts=c_pred_pts, get_l1e=False)
+    cv2.imwrite('caf_0.jpg', sim)
 
     if args.save:
             json_file = os.path.splitext(aimage)[0] + '.jpg'
