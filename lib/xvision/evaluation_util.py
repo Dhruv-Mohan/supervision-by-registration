@@ -17,7 +17,6 @@ import cv2
 
 import os
 
-import natsort
 '''
 inject_path = '/home/dhruv/Projects/Datasets/G_video/images'
 inject_image_list = os.listdir(inject_path)

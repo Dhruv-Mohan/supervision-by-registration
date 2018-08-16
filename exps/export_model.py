@@ -80,10 +80,10 @@ def evaluate(args):
     output_name = ['locs', 'scors']
 
 
-    im = cv2.imread('./cache_data/onnxim/0.jpg')
+    im = cv2.imread('0.jpg')
     imshape = im.shape
     face = [0, 0, imshape[0], imshape[1]]
-    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('./cache_data/onnxim/0.jpg', face)
+    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('0.jpg', face)
     '''
     #input('imcrap')
     #inputs = image.unsqueeze(0)
@@ -91,8 +91,11 @@ def evaluate(args):
     '''
     inputs = image.unsqueeze(0)
     with torch.no_grad():
-        #batch_locs, batch_scos = net(inputs)
+        batch_locs, batch_scos = net(inputs)
         torch.onnx.export(net, inputs, onnx_name, verbose=True, input_names=input_name, output_names=output_name)
+        print(batch_locs)
+        print(batch_scos)
+
 
 
 

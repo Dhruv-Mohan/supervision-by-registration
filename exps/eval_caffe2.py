@@ -27,14 +27,7 @@ _image_path = '/home/dhruv/Projects/Datasets/Groomyfy_16k/Dlibdet/val/'
 _output_path = '/home/dhruv/Projects/TFmodels/sbr/'
 _pts_path_ = '/home/dhruv/Projects/Datasets/Groomyfy_16k/Dlibdet/pts/'
 # _image_path = '/home/dhruv/Projects/Datasets/300VW_Dataset_2015_12_14/001/out/'
-import onnx
-import caffe2.python.onnx.backend as backend
-model = onnx.load("cpm_vgg16-epoch-009-050.onnx")
-# Check that the IR is well formed
-onnx.checker.check_model(model)
 
-# Print a human readable representation of the graph
-print(onnx.helper.printable_graph(model.graph))
 
 def evaluate(args):
     assert torch.cuda.is_available(), 'CUDA is not available.'
@@ -74,16 +67,27 @@ def evaluate(args):
     images = os.listdir(args.image_path)
     images = natsort.natsorted(images)
     total_images = len(images)
-    rep = backend.prepare(model, device="CUDA:0")  # or "CPU"
+
     for im_ind, aimage in enumerate(images):
         progressbar(im_ind, total_images)
-        aim = os.path.join(args.image_path, aimage)
+        #aim = os.path.join(args.image_path, aimage)
+        aim = '0.jpg'
         args.image = aim
         im = cv2.imread(aim)
         imshape = im.shape
+        print(imshape)
+        input('crap12')
         args.face = [0, 0, imshape[0], imshape[1]]
         [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input(args.image, args.face)
         inputs = image.unsqueeze(0).cuda()
+        scale_h, scale_w = cropped_size[0] * 1. / inputs.size(-2), cropped_size[1] * 1. / inputs.size(-1)
+        print(inputs.size(-2))
+        print(inputs.size(-1))
+        print(scale_w.data.numpy())
+        print(scale_h.data.numpy())
+        print(cropped_size.data.numpy())
+        input('crap')
+
         # network forward
         with torch.no_grad():
             batch_locs, batch_scos = net(inputs)
@@ -95,7 +99,6 @@ def evaluate(args):
             cpu).numpy(), cropped_size.numpy()
         locations, scores = np_batch_locs[0, :-1, :], np.expand_dims(np_batch_scos[0, :-1], -1)
 
-        scale_h, scale_w = cropped_size[0] * 1. / inputs.size(-2), cropped_size[1] * 1. / inputs.size(-1)
 
         locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[2], locations[:, 1] * scale_h + \
                                            cropped_size[3]
