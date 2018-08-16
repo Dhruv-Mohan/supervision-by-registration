@@ -67,7 +67,7 @@ def evaluate(args):
 
     c_pred_pts = np.transpose(c_pred_pts, [1, 0])
     c_pred_pts = c_pred_pts[:, :-1]
-
+    print(c_pred_pts, '\n\n\n')
 
 
     if args.save:
