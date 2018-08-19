@@ -21,7 +21,9 @@ print('import')
 onnx.checker.check_model(model)
 # Print a human readable representation of the graph
 print(onnx.helper.printable_graph(model.graph))
-
+import pickle
+with open('pick.pick', 'rb') as crap:
+    in_fi = pickle.load(crap)
 
 
 def normalize(im):
@@ -43,7 +45,7 @@ def evaluate(args):
 
     rep = backend.prepare(model, device="CUDA:0")  # or "CPU"
 
-    args.image = '0.jpg'
+    args.image = 'Menpo51220/val/0000008.jpg'
     aim = args.image
     im = cv2.imread(aim)
     imshape = im.shape
@@ -52,22 +54,23 @@ def evaluate(args):
     # network forward
 
 
-    c_locs, c_scors = rep.run(image)
+    c_locs, c_scors, heatmap = rep.run(in_fi)
     # obtain the locations on the image in the orignial size
     print(c_locs)
-    print(c_scors, '\n\n\n')
-
-
-    c_locations = c_locs[0, :-1, :]
+    #print(c_scors, '\n\n\n')
+    print(heatmap)
+    c_locations = c_locs[:-1, :]
     c_locations[:, 0], c_locations[:, 1] = c_locations[:, 0] * imshape[1]/256. , c_locations[:, 1] * imshape[0]/256.
 
-    c_scores = np.expand_dims(c_scors[0, :-1], -1)
-
+    c_scores = np.expand_dims(c_scors[:-1], -1)
+    print(c_locations.shape)
+    print(c_scores.shape)
     c_pred_pts = np.concatenate((c_locations, c_scores), axis=1).transpose(1, 0)
+
 
     c_pred_pts = np.transpose(c_pred_pts, [1, 0])
     c_pred_pts = c_pred_pts[:, :-1]
-    print(c_pred_pts, '\n\n\n')
+    #print(c_pred_pts, '\n\n\n')
     sim = draw_pts(im, pred_pts=c_pred_pts, get_l1e=False)
     cv2.imwrite('caf_0.jpg', sim)
 

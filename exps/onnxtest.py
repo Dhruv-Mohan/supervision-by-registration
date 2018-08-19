@@ -18,7 +18,7 @@ mean_fill = tuple([int(x * 255) for x in [0.485, 0.456, 0.406]])
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
-model = onnx.load("cpm_vgg16-epoch-009-050.onnx")
+model = onnx.load("cpm_vgg16-epoch-008-050.onnx")
 pre_crop_expand=0.2
 # Check that the IR is well formed
 onnx.checker.check_model(model)

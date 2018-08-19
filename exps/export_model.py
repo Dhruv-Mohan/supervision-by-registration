@@ -26,13 +26,14 @@ from Records.utils.draw import draw_pts
 from Records.utils.terminal_utils import progressbar
 from Records.Collection_engine import Collection_engine
 from Records.utils.pointIO import *
+from torch.autograd import Variable
 
 _image_path = 'Menpo51220/val/'
 _output_path = 'sbr/'
 _pts_path_ = 'Menpo51220/pts/'
 #_image_path = '/home/dhruv/Projects/Datasets/300VW_Dataset_2015_12_14/001/out/'
 images = os.listdir(_image_path)
-
+import pickle
 
 def evaluate(args):
     assert torch.cuda.is_available(), 'CUDA is not available.'
@@ -44,7 +45,7 @@ def evaluate(args):
     print('The model is {:}'.format(args.model))
     print('Model name is {:} \nOutput onnx file is {:}'.format(model_name, onnx_name))
 
-    snapshot = Path('snapshots/CPM-SBR/checkpoint/cpm_vgg16-epoch-009-050.pth')
+    snapshot = Path(args.model)
     assert snapshot.exists(), 'The model does not exist {:}'
     #print('Output onnx file is {:}'.format(onnx_name))
     snapshot = torch.load(snapshot)
@@ -70,34 +71,46 @@ def evaluate(args):
     net = obtain_model(model_config, param.num_pts + 1)
     net = net
     weights = remove_module_dict(snapshot['state_dict'])
+
     nu_weights = {}
     for key, val in weights.items():
         nu_weights[key.split('detector.')[-1]] = val
         print(key.split('detector.')[-1])
     weights = nu_weights
+
     net.load_state_dict(weights)
+
+
     input_name = ['image_in']
-    output_name = ['locs', 'scors']
+    output_name = ['locs', 'scors', 'crap']
 
 
-    im = cv2.imread('0.jpg')
+    im = cv2.imread('Menpo51220/val/0000008.jpg')
+
     imshape = im.shape
     face = [0, 0, imshape[0], imshape[1]]
-    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('0.jpg', face)
-    '''
-    #input('imcrap')
-    #inputs = image.unsqueeze(0)
+    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('Menpo51220/val/0000008.jpg', face)
+    dummy_input = torch.randn(1, 3, 256, 256, requires_grad=True).cuda()
 
-    '''
+    #input('imcrap')
+
+
+
     inputs = image.unsqueeze(0)
+    out_in = inputs.data.numpy()
+    with open('pick.pick' , 'wb') as crap:
+        pickle.dump(out_in, crap)
+
     with torch.no_grad():
-        batch_locs, batch_scos = net(inputs)
-        torch.onnx.export(net, inputs, onnx_name, verbose=True, input_names=input_name, output_names=output_name)
+        batch_locs, batch_scos, heatmap= net(inputs)
+        torch.onnx.export(net.cuda(), dummy_input, onnx_name, verbose=True, input_names=input_name, output_names=output_name, export_params=True)
         print(batch_locs)
         print(batch_scos)
+        print(heatmap)
     cpu = torch.device('cpu')
     np_batch_locs, np_batch_scos, cropped_size = batch_locs.to(cpu).numpy(), batch_scos.to(cpu).numpy(), cropped_size.numpy()
-    locations, scores = np_batch_locs[0,:-1,:], np.expand_dims(np_batch_scos[0,:-1], -1)
+    locations = np_batch_locs[:-1,:]
+    scores = np.expand_dims(np_batch_scos[:-1], -1)
 
     scale_h, scale_w = cropped_size[0] * 1. / inputs.size(-2) , cropped_size[1] * 1. / inputs.size(-1)
 
@@ -107,7 +120,7 @@ def evaluate(args):
 
     pred_pts = np.transpose(prediction, [1, 0])
     pred_pts = pred_pts[:, :-1]
-    print(pred_pts)
+    #print(pred_pts)
     sim = draw_pts(im, pred_pts=pred_pts, get_l1e=False)
     cv2.imwrite('py_0.jpg', sim)
 
