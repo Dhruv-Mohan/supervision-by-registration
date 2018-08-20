@@ -85,11 +85,11 @@ def evaluate(args):
     output_name = ['locs', 'scors', 'crap']
 
 
-    im = cv2.imread('Menpo51220/val/0000008.jpg')
+    im = cv2.imread('Menpo51220/val/0004503.jpg')
 
     imshape = im.shape
     face = [0, 0, imshape[0], imshape[1]]
-    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('Menpo51220/val/0000008.jpg', face)
+    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('Menpo51220/val/0004503.jpg', face)
     dummy_input = torch.randn(1, 3, 256, 256, requires_grad=True).cuda()
 
     #input('imcrap')
@@ -103,7 +103,7 @@ def evaluate(args):
 
     with torch.no_grad():
         batch_locs, batch_scos, heatmap= net(inputs)
-        torch.onnx.export(net.cuda(), dummy_input, onnx_name, verbose=True, input_names=input_name, output_names=output_name, export_params=True)
+        #torch.onnx.export(net.cuda(), dummy_input, onnx_name, verbose=True, input_names=input_name, output_names=output_name, export_params=True)
         print(batch_locs)
         print(batch_scos)
         print(heatmap)

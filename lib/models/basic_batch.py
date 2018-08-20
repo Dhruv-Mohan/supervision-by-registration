@@ -106,7 +106,7 @@ def find_tensor_peak_batch(heatmap, radius, downsample, threshold = 0.000001):
 
   theta = affine_parameter.to(heatmap.device)
   grid_size = torch.Size([num_pts, 1, radius*2+1, radius*2+1])
-  return heatmap, grid_size, affine_parameter, final_stack
+  return heatmap, grid_size, final_stack, final_stack
 
 
 

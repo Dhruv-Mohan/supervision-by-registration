@@ -27,14 +27,16 @@ with open('pick.pick', 'rb') as crap:
 
 
 def normalize(im):
-    im = im.astype(np.float32)
+    im = im.astype(np.float32)/255.
+
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
+    im = cv2.resize(im, (256, 256), 0)
     for i in range(3):
         im[:,:,i] -= mean[i]
         im[:,:,i] /= std[i]
 
-    im = cv2.resize(im, (256, 256), 0)
+
     im = np.transpose(im, (2,0,1))
     im = np.expand_dims(im, 0)
 
@@ -45,7 +47,7 @@ def evaluate(args):
 
     rep = backend.prepare(model, device="CUDA:0")  # or "CPU"
 
-    args.image = 'Menpo51220/val/0000008.jpg'
+    args.image = 'Menpo51220/val/0004503.jpg'
     aim = args.image
     im = cv2.imread(aim)
     imshape = im.shape
@@ -54,7 +56,7 @@ def evaluate(args):
     # network forward
 
 
-    c_locs, c_scors, heatmap = rep.run(in_fi)
+    c_locs, c_scors, heatmap = rep.run(image)
     # obtain the locations on the image in the orignial size
     print(c_locs)
     #print(c_scors, '\n\n\n')
