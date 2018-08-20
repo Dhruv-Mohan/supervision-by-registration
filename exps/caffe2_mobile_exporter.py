@@ -12,7 +12,6 @@ from Records.utils.draw import draw_pts
 # _image_path = '/home/dhruv/Projects/Datasets/300VW_Dataset_2015_12_14/001/out/'
 import caffe2.python.onnx.backend as backend
 from caffe2.python.predictor import mobile_exporter
-#from caffe2.python import core, net_drawer, net_printer, visualize, workspace, utils
 import onnx
 print('import')
 
@@ -48,19 +47,7 @@ def normalize(im):
 def evaluate(args):
     print('Prepare input data')
 
-    rep = backend.prepare(model, device="CUDA:0", )  # or "CPU"
-    input('rep made')
-
-    args.image = 'Menpo51220/val/0000018.jpg'
-    aim = args.image
-    im = cv2.imread(aim)
-    imshape = im.shape
-    args.face = [0, 0, imshape[0], imshape[1]]
-    image = normalize(im)
-    # network forward
-
-
-    c_locs, c_scors, heatmap = rep.run(in_fi)
+    rep = backend.prepare(model, device="CUDA:0")  # or "CPU"
     prepared_backend = rep
     c2_workspace = prepared_backend.workspace
     c2_model = prepared_backend.predict_net
@@ -71,6 +58,16 @@ def evaluate(args):
     with open('predict_net.pb', "wb") as fopen:
         fopen.write(predict_net.SerializeToString())
     pass
+    args.image = 'Menpo51220/val/0000018.jpg'
+    aim = args.image
+    im = cv2.imread(aim)
+    imshape = im.shape
+    args.face = [0, 0, imshape[0], imshape[1]]
+    image = normalize(im)
+    # network forward
+
+
+    c_locs, c_scors, heatmap = rep.run(image)
     # obtain the locations on the image in the orignial size
     print(c_locs)
     #print(c_scors, '\n\n\n')

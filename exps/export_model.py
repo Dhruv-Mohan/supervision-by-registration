@@ -3,6 +3,7 @@ from __future__ import division
 
 
 import sys, time, torch, random, argparse, PIL
+torch.set_default_tensor_type(torch.FloatTensor)
 from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -34,6 +35,7 @@ _pts_path_ = 'Menpo51220/pts/'
 #_image_path = '/home/dhruv/Projects/Datasets/300VW_Dataset_2015_12_14/001/out/'
 images = os.listdir(_image_path)
 import pickle
+
 
 def evaluate(args):
     assert torch.cuda.is_available(), 'CUDA is not available.'
@@ -85,13 +87,13 @@ def evaluate(args):
     output_name = ['locs', 'scors', 'crap']
 
 
-    im = cv2.imread('Menpo51220/val/0004503.jpg')
+    im = cv2.imread('Menpo51220/val/0000018.jpg')
 
     imshape = im.shape
     face = [0, 0, imshape[0], imshape[1]]
-    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('Menpo51220/val/0004503.jpg', face)
-    dummy_input = torch.randn(1, 3, 256, 256, requires_grad=True).cuda()
-
+    [image, _, _, _, _, _, cropped_size], meta = dataset.prepare_input('Menpo51220/val/0000018.jpg', face)
+    dummy_input = torch.randn(1, 3, 256, 256, requires_grad=True, dtype= torch.float32)
+    input(dummy_input.dtype)
     #input('imcrap')
 
 
@@ -103,7 +105,7 @@ def evaluate(args):
 
     with torch.no_grad():
         batch_locs, batch_scos, heatmap= net(inputs)
-        #torch.onnx.export(net.cuda(), dummy_input, onnx_name, verbose=True, input_names=input_name, output_names=output_name, export_params=True)
+        torch.onnx.export(net.cuda(), dummy_input.cuda(), onnx_name, verbose=True, input_names=input_name, output_names=output_name, export_params=True)
         print(batch_locs)
         print(batch_scos)
         print(heatmap)
